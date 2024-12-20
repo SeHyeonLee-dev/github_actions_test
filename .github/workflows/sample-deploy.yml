@@ -40,6 +40,10 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > key.pem
           chmod 600 key.pem
 
+      - name: Convert repository owner to lowercase
+        id: vars
+        run: echo "owner_lower=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: SSH into EC2 and pull/run container
         run: |
           # 환경변수 준비 (secrets에 해당 값들을 넣어두어야 값이 똑바로 읽어와진다!)
@@ -49,6 +53,8 @@ jobs:
           # EC2 서버 접속 후 Docker 명령 실행
           # 현재 실행 중인 동일한 컨테이너가 있다면 삭제한다.
           ssh -o StrictHostKeyChecking=no -i key.pem $USER@$HOST "docker rm -f my-express-app || true"
+
+
 
           # GHCR로부터 최신 이미지 pull
           ssh -o StrictHostKeyChecking=no -i key.pem $USER@$HOST "docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_PAT }}"
